@@ -33,15 +33,23 @@ eu3,ə̄
 Run this once after building the exe to create a ready-to-send folder:
 
 ```
-.\dist\TextExpander.exe --build-share ".\share_with_colleague"
+.\dist\TextExpander.exe --build-share ".\Shortcut_Expander"
 ```
 
-Then zip `share_with_colleague\` and send it. No Python required on the recipient's machine.
+Then zip `Shortcut_Expander\` and send it. No Python required on the recipient's machine.
 
 ## Build the exe
 
 ```
 build_exe.bat
+```
+
+## One-go Python orchestrator
+
+Run one command to install deps, build exe, and create the final `Shortcut_Expander\` folder:
+
+```
+py .\build_pipeline.py
 ```
 
 ## Optional flags

@@ -596,12 +596,13 @@ def build_share_folder(output_dir: str) -> None:
 
 
 if __name__ == "__main__":
-    _acquire_single_instance_lock()
     args = parse_args(sys.argv[1:])
 
     if args.build_share:
         build_share_folder(args.build_share)
         sys.exit(0)
+
+    _acquire_single_instance_lock()
 
     csv_file = args.csv or find_default_shortcut_file("shortcuts.csv")
     text_file = args.text_file or find_default_shortcut_file("shortcuts.txt")

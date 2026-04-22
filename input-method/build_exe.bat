@@ -26,27 +26,9 @@ for %%V in (314 313 312 311 310) do (
 )
 
 echo Python not found. Please install Python from https://python.org and re-run.
-pause
 exit /b 1
 
 :found_python
 echo Using Python: %PYTHON_EXE%
-
-echo Step 1: Installing dependencies...
-"%PYTHON_EXE%" -m pip install --upgrade pyinstaller keyboard
-
-echo Step 2: Building TextExpander.exe...
-"%PYTHON_EXE%" -m PyInstaller --clean --noconfirm --onefile --name TextExpander text_expansion.py
-if errorlevel 1 (
-    echo Build failed.
-    pause
-    exit /b 1
-)
-
-echo Step 3: Creating share_with_colleague folder...
-.\dist\TextExpander.exe --build-share ".\share_with_colleague"
-
-echo.
-echo Done. EXE is in dist\TextExpander.exe
-echo Share folder is in share_with_colleague\
-pause
+"%PYTHON_EXE%" build_pipeline.py
+exit /b %errorlevel%
