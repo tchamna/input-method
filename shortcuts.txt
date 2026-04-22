@@ -1,0 +1,4 @@
+# one shortcut per line: key=value
+asap=as soon as possible
+brb=be right back
+omw=on my way
