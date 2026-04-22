@@ -539,12 +539,69 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         default=None,
         help="Optional path to write debug key-event logs",
     )
+    parser.add_argument(
+        "--build-share",
+        type=str,
+        metavar="OUTPUT_DIR",
+        default=None,
+        help="Build a shareable folder with the exe and shortcut files",
+    )
     return parser.parse_args(argv)
+
+
+def build_share_folder(output_dir: str) -> None:
+    import shutil
+
+    out = Path(output_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    if getattr(sys, "frozen", False):
+        exe_src = Path(sys.executable)
+    else:
+        exe_src = Path(sys.executable).parent / "dist" / "TextExpander.exe"
+
+    if exe_src.exists():
+        shutil.copy2(str(exe_src), str(out / "TextExpander.exe"))
+        print(f"Copied exe: {exe_src}")
+    else:
+        print(f"Warning: exe not found at {exe_src}. Build it first with build_exe.bat.")
+
+    for filename in ("shortcuts.csv", "shortcuts.txt"):
+        src = find_default_shortcut_file(filename)
+        if src:
+            shutil.copy2(src, str(out / filename))
+            print(f"Copied {filename}")
+
+    bat = out / "Run TextExpander.bat"
+    bat.write_text(
+        '@echo off\ncd /d "%~dp0"\nstart "" "%~dp0TextExpander.exe" --global\n',
+        encoding="utf-8",
+    )
+    print(f"Created launcher: {bat}")
+
+    readme = out / "README.txt"
+    readme.write_text(
+        "TextExpander — portable shortcut expander\n"
+        "\n"
+        "1. Keep all files in the same folder.\n"
+        "2. Double-click Run TextExpander.bat to start.\n"
+        "3. Type a shortcut then press Space or Tab to expand.\n"
+        "4. Edit shortcuts.csv and save — changes are picked up automatically.\n"
+        "5. Press Ctrl+Alt+Q to quit.\n"
+        "\nIf expansion doesn't work in some apps, run the bat as Administrator.\n",
+        encoding="utf-8",
+    )
+    print(f"Created README: {readme}")
+    print(f"\nShare folder ready: {out.resolve()}")
 
 
 if __name__ == "__main__":
     _acquire_single_instance_lock()
     args = parse_args(sys.argv[1:])
+
+    if args.build_share:
+        build_share_folder(args.build_share)
+        sys.exit(0)
 
     csv_file = args.csv or find_default_shortcut_file("shortcuts.csv")
     text_file = args.text_file or find_default_shortcut_file("shortcuts.txt")
