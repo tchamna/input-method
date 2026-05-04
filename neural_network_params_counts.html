@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neural Network Parameter Count Simulator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      margin-bottom: 25px;
+      color: #4b5563;
+      line-height: 1.5;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      border: none;
+      background: #2563eb;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.secondary:hover {
+      background: #d1d5db;
+    }
+
+    button.danger {
+      background: #dc2626;
+    }
+
+    button.danger:hover {
+      background: #b91c1c;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .layers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .layer-box {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 15px;
+      background: #fafafa;
+    }
+
+    .layer-box label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    select {
+      min-width: 70px;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      color: #111827;
+    }
+
+    .remove-btn {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .summary-box {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .summary-box .label {
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .summary-box .value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #111827;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #f3f4f6;
+    }
+
+    .formula {
+      font-family: Consolas, monospace;
+      color: #374151;
+    }
+
+    .visual-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #fbfdff;
+      padding: 10px;
+    }
+
+    svg {
+      min-width: 900px;
+      width: 100%;
+      height: 520px;
+      display: block;
+    }
+
+    .connection {
+      stroke: #475569;
+      stroke-width: 1.8;
+      opacity: 1;
+    }
+
+    .highlight-connection {
+      stroke: #ef4444;
+      stroke-width: 3;
+      opacity: 1;
+    }
+
+    .highlight-neuron {
+      fill: #ef4444 !important;
+      stroke: #9f1239 !important;
+    }
+
+    .neuron {
+      fill: #2563eb;
+      stroke: #1e40af;
+      stroke-width: 2;
+    }
+
+    .neuron.input {
+      fill: #10b981;
+      stroke: #047857;
+    }
+
+    .neuron.output {
+      fill: #f59e0b;
+      stroke: #b45309;
+    }
+
+    .layer-title {
+      font-size: 14px;
+      font-weight: bold;
+      fill: #111827;
+      text-anchor: middle;
+    }
+
+    .layer-count {
+      font-size: 12px;
+      fill: #6b7280;
+      text-anchor: middle;
+    }
+
+    .too-many-label {
+      font-size: 12px;
+      fill: #6b7280;
+      text-anchor: middle;
+    }
+
+    .path-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .path-controls label,
+    .path-count {
+      font-size: 13px;
+      color: #374151;
+    }
+
+    .note {
+      margin-top: 12px;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Neural Network Parameter Count Simulator</h1>
+    <p class="subtitle">
+      Enter the number of neurons in each layer. The simulator draws the network and calculates weights, biases, and total trainable parameters.
+      For a fully connected layer: <strong>parameters = input neurons × output neurons + output biases</strong>.
+    </p>
+
+    <div class="card">
+      <div class="buttons">
+        <button class="secondary" onclick="loadExample([5, 2, 1])">Example: 5 → 2 → 1</button>
+        <button class="secondary" onclick="loadExample([10, 8, 4, 1])">Small Network</button>
+        <button class="secondary" onclick="loadExample([20, 16, 8, 4, 2])">Deeper Network</button>
+        <button onclick="addLayer()">Add Hidden Layer</button>
+      </div>
+
+      <h2>Layers</h2>
+      <div id="layers" class="layers"></div>
+    </div>
+
+    <div class="card">
+      <h2>Network Schema</h2>
+      <div class="path-controls">
+        <label>Start (Input):
+          <select id="startNeuronSelect"></select>
+        </label>
+        <label>End (Output):
+          <select id="endNeuronSelect"></select>
+        </label>
+        <button id="showPathBtn">Show Path</button>
+        <button id="clearPathBtn" class="secondary">Clear</button>
+        <div class="path-count">Paths: <span id="pathCount">0</span></div>
+      </div>
+      <div class="visual-wrapper">
+        <svg id="networkSvg"></svg>
+      </div>
+      <p class="note">
+        Each circle is a neuron. Lines show full connections between one layer and the next. For large layers, the diagram shows a limited number of circles with “...” to keep the drawing readable.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Total Parameter Summary</h2>
+      <div class="summary">
+        <div class="summary-box">
+          <div class="label">Weights</div>
+          <div id="totalWeights" class="value">0</div>
+        </div>
+        <div class="summary-box">
+          <div class="label">Biases</div>
+          <div id="totalBiases" class="value">0</div>
+        </div>
+        <div class="summary-box">
+          <div class="label">Total Parameters</div>
+          <div id="totalParams" class="value">0</div>
+        </div>
+      </div>
+      <p class="note">
+        These are trainable parameters: the numbers the neural network learns during training.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Layer-by-Layer Calculation</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Connection</th>
+            <th>Formula</th>
+            <th>Weights</th>
+            <th>Biases</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="calculationTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let layers = [5, 2, 1];
+    const maxVisibleNeurons = 12;
+    // Hold rendered DOM elements for quick lookup when highlighting
+    let neuronElements = [];
+    let connectionElements = [];
+    let connectionLookup = new Map();
+    let pathsGroup = null;
+    let pathDefs = null;
+    const MAX_PATHS = 500; // cap to avoid excessive drawing
+
+    function formatNumber(value) {
+      return Number(value).toLocaleString();
+    }
+
+    function sanitizeLayerSize(value) {
+      return Math.max(1, Math.floor(Number(value) || 1));
+    }
+
+    function formatBigInt(value) {
+      return value.toLocaleString();
+    }
+
+    function createSvgElement(tagName, attributes = {}) {
+      const element = document.createElementNS("http://www.w3.org/2000/svg", tagName);
+
+      Object.entries(attributes).forEach(([name, value]) => {
+        element.setAttribute(name, value);
+      });
+
+      return element;
+    }
+
+    function getConnectionKey(fromLayer, fromIndex, toLayer, toIndex) {
+      return `${fromLayer}:${fromIndex}->${toLayer}:${toIndex}`;
+    }
+
+    function getLayerName(index) {
+      if (index === 0) return "Input";
+      if (index === layers.length - 1) return "Output";
+      return "Hidden " + index;
+    }
+
+    function renderLayers() {
+      const layersDiv = document.getElementById("layers");
+      layersDiv.innerHTML = "";
+
+      layers.forEach((neurons, index) => {
+        const box = document.createElement("div");
+        box.className = "layer-box";
+
+        box.innerHTML = `
+          <label>${getLayerName(index)} Layer</label>
+          <input
+            type="number"
+            min="1"
+            value="${neurons}"
+            oninput="updateLayer(${index}, this.value)"
+          />
+          <button class="danger remove-btn" onclick="removeLayer(${index})" ${index === 0 || index === layers.length - 1 ? "disabled" : ""}>
+            Remove
+          </button>
+        `;
+
+        layersDiv.appendChild(box);
+      });
+    }
+
+    function getVisibleNeuronPositions(count, x, svgHeight) {
+      const visibleCount = Math.min(count, maxVisibleNeurons);
+      const top = 90;
+      const bottom = svgHeight - 70;
+      const positions = [];
+
+      if (visibleCount === 1) {
+        positions.push({ x, y: svgHeight / 2, realIndex: 0 });
+        return positions;
+      }
+
+      const spacing = (bottom - top) / (visibleCount - 1);
+      for (let i = 0; i < visibleCount; i++) {
+        positions.push({ x, y: top + i * spacing, realIndex: i });
+      }
+
+      return positions;
+    }
+
+    function drawNetworkSchema() {
+      const svg = document.getElementById("networkSvg");
+      svg.innerHTML = "";
+      neuronElements = [];
+      connectionElements = [];
+      connectionLookup = new Map();
+
+      // add arrow markers for direction
+      const defs = createSvgElement("defs");
+      const marker = createSvgElement("marker", {
+        id: "arrow",
+        markerWidth: "10",
+        markerHeight: "10",
+        refX: "10",
+        refY: "5",
+        orient: "auto",
+      });
+      const path = createSvgElement("path", {
+        d: "M0,0 L0,10 L10,5 z",
+        fill: "#475569",
+      });
+      marker.appendChild(path);
+
+      const markerH = createSvgElement("marker", {
+        id: "arrow-highlight",
+        markerWidth: "10",
+        markerHeight: "10",
+        refX: "10",
+        refY: "5",
+        orient: "auto",
+      });
+      const pathH = createSvgElement("path", {
+        d: "M0,0 L0,10 L10,5 z",
+        fill: "#ef4444",
+      });
+      markerH.appendChild(pathH);
+
+      defs.appendChild(marker);
+      defs.appendChild(markerH);
+      svg.appendChild(defs);
+
+      // group for path overlays and store refs for clearing
+      pathDefs = defs;
+      pathsGroup = createSvgElement("g", { id: "pathsGroup" });
+
+      const svgWidth = Math.max(900, layers.length * 190);
+      const svgHeight = 520;
+      svg.setAttribute("viewBox", `0 0 ${svgWidth} ${svgHeight}`);
+
+      const leftPadding = 80;
+      const rightPadding = 80;
+      const usableWidth = svgWidth - leftPadding - rightPadding;
+      const layerGap = layers.length === 1 ? 0 : usableWidth / (layers.length - 1);
+
+      const layerPositions = layers.map((count, index) => {
+        const x = leftPadding + index * layerGap;
+        return getVisibleNeuronPositions(sanitizeLayerSize(count), x, svgHeight);
+      });
+
+      for (let i = 0; i < layerPositions.length - 1; i++) {
+        const currentLayer = layerPositions[i];
+        const nextLayer = layerPositions[i + 1];
+
+        currentLayer.forEach(start => {
+          nextLayer.forEach(end => {
+            const line = createSvgElement("line", {
+              x1: start.x,
+              y1: start.y,
+              x2: end.x,
+              y2: end.y,
+              class: "connection",
+              "marker-end": "url(#arrow)",
+            });
+            line.dataset.fromLayer = i;
+            line.dataset.fromIndex = start.realIndex;
+            line.dataset.toLayer = i + 1;
+            line.dataset.toIndex = end.realIndex;
+            svg.appendChild(line);
+
+            const connection = {
+              fromLayer: i,
+              fromIndex: start.realIndex,
+              toLayer: i + 1,
+              toIndex: end.realIndex,
+              el: line,
+            };
+            connectionElements.push(connection);
+            connectionLookup.set(
+              getConnectionKey(i, start.realIndex, i + 1, end.realIndex),
+              connection
+            );
+          });
+        });
+      }
+
+      layerPositions.forEach((positions, layerIndex) => {
+        const x = leftPadding + layerIndex * layerGap;
+        const layerSize = sanitizeLayerSize(layers[layerIndex]);
+        const title = createSvgElement("text", {
+          x,
+          y: 28,
+          class: "layer-title",
+        });
+        title.textContent = getLayerName(layerIndex);
+        svg.appendChild(title);
+
+        const countLabel = createSvgElement("text", {
+          x,
+          y: 48,
+          class: "layer-count",
+        });
+        countLabel.textContent = formatNumber(layerSize) + " neurons";
+        svg.appendChild(countLabel);
+
+        // collect neuron elements for this layer
+        neuronElements[layerIndex] = [];
+        positions.forEach(pos => {
+          let className = "neuron";
+          if (layerIndex === 0) className += " input";
+          if (layerIndex === layers.length - 1) className += " output";
+
+          const circle = createSvgElement("circle", {
+            cx: pos.x,
+            cy: pos.y,
+            r: 13,
+            class: className,
+          });
+          circle.dataset.layer = layerIndex;
+          circle.dataset.index = pos.realIndex;
+          svg.appendChild(circle);
+
+          neuronElements[layerIndex].push(circle);
+        });
+
+        if (layerSize > maxVisibleNeurons) {
+          const dots = createSvgElement("text", {
+            x,
+            y: svgHeight - 35,
+            class: "too-many-label",
+          });
+          dots.textContent = `... showing ${maxVisibleNeurons} of ${formatNumber(layerSize)}`;
+          svg.appendChild(dots);
+        }
+      });
+
+      svg.appendChild(pathsGroup);
+
+      // populate start/end selectors with visible neuron indices and wire controls
+      const startSel = document.getElementById('startNeuronSelect');
+      const endSel = document.getElementById('endNeuronSelect');
+      if (startSel && endSel) {
+        startSel.innerHTML = '';
+        endSel.innerHTML = '';
+        const visibleStart = Math.min(sanitizeLayerSize(layers[0]), maxVisibleNeurons);
+        const visibleEnd = Math.min(sanitizeLayerSize(layers[layers.length - 1]), maxVisibleNeurons);
+        for (let i = 0; i < visibleStart; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = (i + 1);
+          startSel.appendChild(opt);
+        }
+        for (let i = 0; i < visibleEnd; i++) {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = (i + 1);
+          endSel.appendChild(opt);
+        }
+      }
+
+      const pathCount = document.getElementById('pathCount');
+      if (pathCount) pathCount.textContent = '0';
+
+      setupPathControls();
+    }
+
+    function clearHighlight() {
+      neuronElements.forEach(layerArr => {
+        if (!layerArr) return;
+        layerArr.forEach(c => c.classList.remove('highlight-neuron'));
+      });
+      connectionElements.forEach(conn => {
+        conn.el.classList.remove('highlight-connection');
+        // reset arrow marker
+        conn.el.setAttribute('marker-end', 'url(#arrow)');
+      });
+      // clear any path overlays and markers
+      if (pathsGroup) {
+        while (pathsGroup.firstChild) pathsGroup.removeChild(pathsGroup.firstChild);
+      }
+      if (pathDefs) {
+        const extraMarkers = pathDefs.querySelectorAll('[id^="arrow-path-"]');
+        extraMarkers.forEach(m => m.parentNode && m.parentNode.removeChild(m));
+      }
+      const pc = document.getElementById('pathCount'); if (pc) pc.textContent = '0';
+    }
+
+    function highlightAllPaths(startIndexVisible, endIndexVisible) {
+      clearHighlight();
+      if (!neuronElements || neuronElements.length === 0) return;
+
+      const endLayer = layers.length - 1;
+      const endKey = `${endLayer}:${endIndexVisible}`;
+
+      // build adjacency maps
+      const adj = {};
+      connectionElements.forEach(c => {
+        const fromKey = `${c.fromLayer}:${c.fromIndex}`;
+        const toKey = `${c.toLayer}:${c.toIndex}`;
+        if (!adj[fromKey]) adj[fromKey] = [];
+        adj[fromKey].push(toKey);
+      });
+
+      // forward search from start
+      // Instead of just intersection, enumerate all distinct paths (layered DAG)
+      const allPaths = [];
+      function dfs(layer, index, acc) {
+        if (allPaths.length >= MAX_PATHS) return; // cap
+        const key = `${layer}:${index}`;
+        acc.push(key);
+        if (layer === layers.length - 1) {
+          if (key === endKey) allPaths.push(acc.slice());
+          acc.pop();
+          return;
+        }
+        const nbrs = adj[key] || [];
+        nbrs.forEach(nk => {
+          const [nl, ni] = nk.split(':').map(Number);
+          dfs(nl, ni, acc);
+        });
+        acc.pop();
+      }
+
+      dfs(0, startIndexVisible, []);
+
+      const fullPathCount = countLayerPaths();
+
+      const pc = document.getElementById('pathCount');
+      if (pc) {
+        const renderedPathCount = BigInt(allPaths.length);
+        pc.textContent = renderedPathCount === fullPathCount
+          ? formatBigInt(fullPathCount)
+          : `${formatBigInt(fullPathCount)} total (${formatBigInt(renderedPathCount)} shown)`;
+      }
+
+      if (allPaths.length === 0) return;
+
+      // draw each path with its own color
+      function colorForIndex(i, total) {
+        const h = Math.round((i * 360) / Math.max(1, total));
+        return `hsl(${h}, 75%, 50%)`;
+      }
+
+      // create markers and overlays per path
+      allPaths.forEach((path, pi) => {
+        const color = colorForIndex(pi, allPaths.length);
+        // create arrow marker for this path
+        const mid = `arrow-path-${pi}`;
+        const pm = createSvgElement("marker", {
+          id: mid,
+          markerWidth: "10",
+          markerHeight: "10",
+          refX: "10",
+          refY: "5",
+          orient: "auto",
+        });
+        const ppath = createSvgElement("path", {
+          d: "M0,0 L0,10 L10,5 z",
+          fill: color,
+        });
+        pm.appendChild(ppath);
+        if (pathDefs) pathDefs.appendChild(pm);
+
+        // draw overlay lines and small rings at nodes
+        for (let k = 0; k < path.length - 1; k++) {
+          const [fl, fi] = path[k].split(':').map(Number);
+          const [tl, ti] = path[k + 1].split(':').map(Number);
+          // find base connection to get coords
+          const base = connectionLookup.get(getConnectionKey(fl, fi, tl, ti));
+          if (!base) continue;
+          const bl = base.el;
+          const overlay = createSvgElement("line", {
+            x1: bl.getAttribute('x1'),
+            y1: bl.getAttribute('y1'),
+            x2: bl.getAttribute('x2'),
+            y2: bl.getAttribute('y2'),
+            stroke: color,
+            "stroke-width": 3,
+            fill: "none",
+            "marker-end": `url(#${mid})`,
+            class: "path-overlay",
+          });
+          pathsGroup.appendChild(overlay);
+        }
+
+        // rings on nodes
+        path.forEach(nodeKey => {
+          const [l, i] = nodeKey.split(':').map(Number);
+          const circ = neuronElements[l] && neuronElements[l][i];
+          if (!circ) return;
+          const ring = createSvgElement("circle", {
+            cx: circ.getAttribute('cx'),
+            cy: circ.getAttribute('cy'),
+            r: 16,
+            fill: "none",
+            stroke: color,
+            "stroke-width": 2,
+            opacity: 0.9,
+            class: "path-ring",
+          });
+          pathsGroup.appendChild(ring);
+        });
+      });
+    }
+
+    function countLayerPaths() {
+      let count = 1n;
+
+      for (let i = 1; i < layers.length - 1; i++) {
+        const layerSize = sanitizeLayerSize(layers[i]);
+        count *= BigInt(layerSize);
+      }
+
+      return count;
+    }
+
+    function setupPathControls() {
+      const showBtn = document.getElementById('showPathBtn');
+      const clearBtn = document.getElementById('clearPathBtn');
+      const startSel = document.getElementById('startNeuronSelect');
+      const endSel = document.getElementById('endNeuronSelect');
+      if (showBtn) {
+        showBtn.onclick = () => {
+          const s = Number(startSel.value) || 0;
+          const e = Number(endSel.value) || 0;
+          highlightAllPaths(s, e);
+        };
+      }
+      if (clearBtn) {
+        clearBtn.onclick = () => clearHighlight();
+      }
+    }
+
+    function calculateParameters() {
+      let totalWeights = 0;
+      let totalBiases = 0;
+      const tableBody = document.getElementById("calculationTable");
+      tableBody.innerHTML = "";
+
+      for (let i = 1; i < layers.length; i++) {
+        const inputNeurons = sanitizeLayerSize(layers[i - 1]);
+        const outputNeurons = sanitizeLayerSize(layers[i]);
+
+        const weights = inputNeurons * outputNeurons;
+        const biases = outputNeurons;
+        const total = weights + biases;
+
+        totalWeights += weights;
+        totalBiases += biases;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${getLayerName(i - 1)} → ${getLayerName(i)}</td>
+          <td class="formula">${inputNeurons} × ${outputNeurons} + ${outputNeurons}</td>
+          <td>${formatNumber(weights)}</td>
+          <td>${formatNumber(biases)}</td>
+          <td><strong>${formatNumber(total)}</strong></td>
+        `;
+        tableBody.appendChild(row);
+      }
+
+      document.getElementById("totalWeights").textContent = formatNumber(totalWeights);
+      document.getElementById("totalBiases").textContent = formatNumber(totalBiases);
+      document.getElementById("totalParams").textContent = formatNumber(totalWeights + totalBiases);
+    }
+
+    function updateLayer(index, value) {
+      layers[index] = sanitizeLayerSize(value);
+      renderAll();
+    }
+
+    function addLayer() {
+      layers.splice(layers.length - 1, 0, 4);
+      renderAll();
+    }
+
+    function removeLayer(index) {
+      if (index <= 0 || index >= layers.length - 1) return;
+      layers.splice(index, 1);
+      renderAll();
+    }
+
+    function loadExample(exampleLayers) {
+      layers = exampleLayers;
+      renderAll();
+    }
+
+    function renderAll() {
+      renderLayers();
+      drawNetworkSchema();
+      calculateParameters();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
